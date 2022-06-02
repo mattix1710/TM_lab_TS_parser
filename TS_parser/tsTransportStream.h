@@ -83,9 +83,10 @@ public:
   void     Print() const;
 
 public:
-  //TODO - direct acces to header values
+  //TODO - direct access to header values
     uint8_t getAFC() const { return (uint8_t)AFC; };
     uint8_t getSyncByte()   const { return (uint8_t)SB; };
+    uint32_t getPID() const { return PID; };
 
 public:
   //TODO
@@ -140,11 +141,11 @@ protected:
 
 public:
     void    Reset();
-    //int32_t Parse(const uint8_t* Input);
+    int32_t Parse(const uint8_t* Input, const uint8_t* Input2);
 
     //////////////////////////////////////////
     // ADAM
-    int32_t Parse(const uint8_t* Input, const uint8_t* AF);
+    //int32_t Parse(const uint8_t* Input, const uint8_t* AF);
     //
     //////////////////////////////////////////
     void    Print() const;
@@ -187,31 +188,24 @@ public:
     xPES_Assembler();
     ~xPES_Assembler();
 
-    void Init(int32_t PID);
-    eResult AbsorbPacket(const uint8_t* TransportStreamPacket, const xTS_PacketHeader* PacketHeader, const xTS_AdaptationField* AdaptationField);
+    //void Init(int32_t PID);
+    eResult AbsorbPacket(const uint8_t* TransportStreamPacket, const xTS_PacketHeader* PacketHeader, const xTS_AdaptationField* AdaptationField) {
+        xTS_AdaptationField WorkingAdaptationField  = *AdaptationField;
+        xTS_PacketHeader    WorkingPacketHeader = *PacketHeader;
+        m_PESH.Parse((uint8_t*)TransportStreamPacket + 6, (uint8_t*)TransportStreamPacket + 10);
 
-    ///////////////////////////////////////////////////
-    //OD ADAMA!!!!!
-    //eResult AbsorbPacket(const uint8_t* TransportStreamPacket, const xTS_PacketHeader* PacketHeader, const xTS_AdaptationField* AdaptationField) {
-    //    xTS_AdaptationField workingAdaptationField = *AdaptationField;
-    //    xTS_PacketHeader    workingPacketHeader = *PacketHeader;
-    //    m_PESH.Parse((uint8_t*)TransportStreamPacket + 6, (uint8_t*)TransportStreamPacket + 10);
-
-    //    if (workingAdaptationField.getRA() == 1 && workingPacketHeader.getAFC() == 3) {
-    //        m_DataOffset = m_PESH.getPacketLength() + 6;
-    //        return eResult::AssemblingStarted;
-    //    }
-    //    else if (workingPacketHeader.getAFC() == 1) {
-    //        return eResult::AssemblingContinue;
-    //    }
-    //    else if (workingAdaptationField.getRA() == 0 && workingPacketHeader.getAFC() == 3) {
-    //        return eResult::AssemblingFinished;
-    //    }
-    //    return eResult::StreamPacketLost;
-    //}
-
-    //END - OD ADAMA
-    //////////////////////////////////////////////////
+        if (WorkingAdaptationField.getRA() == 1 && WorkingPacketHeader.getAFC() == 3) {
+            m_DataOffset = m_PESH.getPacketLength() + 6;
+            return eResult::AssemblingStarted;
+        }
+        else if (WorkingPacketHeader.getAFC() == 1) {
+            return eResult::AssemblingContinue;
+        }
+        else if (WorkingAdaptationField.getRA() == 0 && WorkingPacketHeader.getAFC() == 3) {
+            return eResult::AssemblingFinished;
+        }
+        return eResult::StreamPacketLost;
+    }
 
     void        PrintPESH           () const { m_PESH.Print(); };
     uint8_t*    getPacket           ()       { return m_Buffer; };

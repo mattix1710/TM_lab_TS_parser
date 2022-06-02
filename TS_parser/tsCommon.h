@@ -10,7 +10,7 @@
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_AMD64) || defined(_M_IX86))
 #include <intrin.h>
 #elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
-#include <x86intrin.h>
+//#include <x86intrin.h>
 #endif
 
 //=============================================================================================================================================================================

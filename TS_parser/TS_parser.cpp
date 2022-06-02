@@ -40,7 +40,7 @@ int main(int argc, char *argv[ ], char *envp[ ])
 
       xTS_PacketHeader      TS_PacketHeader;
       xTS_AdaptationField   TS_PacketAF;
-      //xPES_Assembler        PES_Assembler;
+      xPES_Assembler        PES_Assembler;                      //HACK: gives errors - commentIT!
       xPES_PacketHeader     PES_Header;
 
       //create buffer for header (188 bytes)
@@ -56,22 +56,65 @@ int main(int argc, char *argv[ ], char *envp[ ])
           int read = fread(buffer, sizeof(uint8_t), 188, file);
           //std::cout << read << std::endl;
 
+          ///////////////////////////
+          //
+          // PROJEKT - MACIEK
+          //
+          if (read != xTS::TS_PacketLength) {
+              break;
+          }
+
+          /////////////////////////////
+          // lab01
+          //
+
           TS_PacketHeader.Reset();
           TS_PacketHeader.Parse(buffer);
-
-
           printf("%010d ", TS_PacketId);
           //print each PacketHeader line
           TS_PacketHeader.Print();
 
           ///////////////////////////////
-          // lab02
-          //
-        
-          if (TS_PacketHeader.getAFC() == 2 || TS_PacketHeader.getAFC() == 3) {
-              TS_PacketAF.Parse(buffer+4, TS_PacketHeader.getAFC());                //buffer+4 ~offset by 4 bytes (length of header)
-              TS_PacketAF.Print();
-              //IDEA: Parse 6B data
+          // lab03 - resetowanie DAC w ifie, ¿eby u¿ywaæ AF do PES
+          TS_PacketAF.Reset();
+          if (TS_PacketHeader.getSyncByte() == 'G' && TS_PacketHeader.getPID() == 136) {
+              /////////////////////////////
+              // lab02
+              //TEMP INFO: moja czêœæ
+              if (TS_PacketHeader.getAFC() == 2 || TS_PacketHeader.getAFC() == 3) {
+                  TS_PacketAF.Parse(buffer + 4, TS_PacketHeader.getAFC());          //buffer+4 ~offset by 4 bytes (length of header)
+                  TS_PacketAF.Print();
+                  //IDEA: Parse 6B data
+              }
+
+              /////////////////////
+              // lab03 - continue
+
+              xPES_Assembler::eResult Result = PES_Assembler.AbsorbPacket(buffer, &TS_PacketHeader, &TS_PacketAF);
+              cout << "\t";
+              switch (Result) {
+              case xPES_Assembler::eResult::StreamPacketLost:
+                  cout << "PcktLost";
+                  //printf("PcktLost ");
+                  break;
+              case xPES_Assembler::eResult::AssemblingStarted:
+                  cout << "Started";
+                  //printf("Started ");
+                  PES_Assembler.PrintPESH();
+                  break;
+              case xPES_Assembler::eResult::AssemblingContinue:
+                  cout << "Continue";
+                  //printf("Continue ");
+                  break;
+              case xPES_Assembler::eResult::AssemblingFinished:
+                  cout << "Finished\t";
+                  //printf("Finished ");
+                  cout << "PES: Len= " << PES_Assembler.getNumPacketBytes();
+                  break;
+              default:
+                  break;
+              }
+
           }
 
           printf("\n");

@@ -114,6 +114,10 @@ void xTS_AdaptationField::Print() const{
         << " PR=" << PR << " OR=" << OR << " SF=" << SF << " TP=" << TP << " EX=" << EX << WHITE;
 }
 
+void xTS_AdaptationField::Reset() {
+
+}
+
 //int32_t xPES_PacketHeader::Parse(const uint8_t* Input) {
 //    cout << (*Input) << endl;
 //    return 0;
@@ -131,7 +135,24 @@ int32_t xPES_PacketHeader::Parse(const uint8_t* Input, const uint8_t* AF) {
 }
 
 void xPES_PacketHeader::Print()const {
+    cout << "\t";
     cout << "PSCP: " << (int)m_PacketStartCodePrefix << " ";
     cout << "SI: " << (int)m_StreamId << " ";
     cout << "PL: " << (int)m_PacketLength << " ";
+}
+
+xPES_Assembler::xPES_Assembler()
+{
+}
+
+xPES_Assembler::~xPES_Assembler()
+{
+}
+
+void xPES_Assembler::xBufferReset()
+{
+}
+
+void xPES_Assembler::xBufferAppend(const uint8_t* Data, int32_t Size)
+{
 }
